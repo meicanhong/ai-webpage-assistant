@@ -60,9 +60,10 @@
         background: white;
         box-shadow: -2px 0 5px rgba(0,0,0,0.2);
         border: none;
+        isolation: isolate;
       `;
 
-      // 创建 iframe
+      // 创建 iframe 并添加样式隔离
       const sidebarElement = document.createElement('iframe');
       sidebarElement.id = 'ai-chat-sidebar';
       sidebarElement.src = chrome.runtime.getURL('sidebar.html');
@@ -71,6 +72,7 @@
         height: 100%;
         border: none;
         background: white;
+        isolation: isolate;
       `;
 
       container.appendChild(sidebarElement);
