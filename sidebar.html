@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="styles/sidebar.css">
+</head>
+<body>
+  <div class="sidebar-header">
+    <img src="icons/icon.svg" alt="Logo" class="header-logo">
+    <h1 class="header-title">Chat</h1>
+  </div>
+  <div class="chat-container">
+    <div class="chat-history" id="chatHistory"></div>
+    <div class="input-area">
+      <div class="quick-actions">
+        <button class="quick-action-btn" id="summarizeBtn">📝 总结网页</button>
+      </div>
+      <textarea 
+        id="userInput" 
+        placeholder="输入问题..." 
+        rows="3"
+      ></textarea>
+      <div class="button-container">
+        <button id="sendButton">发送</button>
+        <button id="settingsButton">设置</button>
+      </div>
+    </div>
+  </div>
+  <script src="sidebar.js"></script>
+</body>
+</html> 
