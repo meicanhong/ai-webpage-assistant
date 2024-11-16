@@ -11,13 +11,19 @@
             margin: 0 auto;
             padding: 40px 20px;
         }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
         .title {
             font-size: 24px;
             font-weight: 600;
             color: #202124;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+            margin: 0;
         }
         .form-group {
             margin-bottom: 15px;
@@ -56,10 +62,12 @@
         .success {
             background: #e6f4ea;
             color: #137333;
+            border: 1px solid #137333;
         }
         .error {
             background: #fce8e6;
             color: #c5221f;
+            border: 1px solid #c5221f;
         }
         .prompt-list {
             margin-top: 20px;
@@ -83,10 +91,37 @@
         .delete-btn:hover {
             background: #bb2d3b;
         }
+        #status {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            margin: 0;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease-in-out;
+            text-align: center;
+            min-width: 200px;
+        }
+        @keyframes fadeIn {
+            from { 
+                opacity: 0; 
+                transform: translate(-50%, -60%);
+            }
+            to { 
+                opacity: 1; 
+                transform: translate(-50%, -50%);
+            }
+        }
     </style>
 </head>
 <body>
-    <h1 class="title">设置</h1>
+    <div class="header">
+        <h1 class="title">设置</h1>
+        <button id="saveButton">保存设置</button>
+    </div>
     
     <div class="form-group">
         <label for="apiKey">OpenAI API Key</label>
@@ -112,7 +147,6 @@
         <!-- 已保存的 prompts 将在这里显示 -->
     </div>
 
-    <button id="saveButton" style="margin-top: 20px;">保存设置</button>
     <div id="status" class="message"></div>
 
     <script src="options.js"></script>
