@@ -182,8 +182,20 @@
         url: window.location.href
       }, '*');
     } else if (event.data.action === "openSettings") {
-      // 修改这里：直接发送消息给 background.js
       chrome.runtime.sendMessage({action: "openSettings"});
+    } else if (event.data.action === "toggleSidebar") {
+      console.log('Received toggleSidebar action');
+      if (sidebar) {
+        console.log('Current sidebar right position:', sidebar.style.right);
+        if (sidebar.style.right === '0px') {
+          sidebar.style.right = '-400px';
+        } else {
+          sidebar.style.right = '0px';
+        }
+        console.log('New sidebar right position:', sidebar.style.right);
+      } else {
+        console.error('Sidebar element not found');
+      }
     } else if (event.data.action === "sendToLLM") {
       try {
         console.log('Received sendToLLM request:', event.data);

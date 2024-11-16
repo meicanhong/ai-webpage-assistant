@@ -219,6 +219,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   `;
   document.head.appendChild(style);
+
+  // 添加折叠按钮事件
+  document.getElementById('collapseButton').addEventListener('click', () => {
+    window.parent.postMessage({
+      action: "toggleSidebar"
+    }, '*');
+  });
 });
 
 // 修改消息监听器

@@ -328,4 +328,21 @@ button {
 .clear-button:hover {
   background: #e8eaed;
 }
+
+/* 折叠按钮样式 */
+.collapse-button {
+  margin-left: 8px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.collapse-button:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
   
