@@ -66,6 +66,34 @@ document.addEventListener('DOMContentLoaded', async () => {
       quickActions.appendChild(btn);
     });
   }
+
+  // 动态调整聊天历史区域的内边距
+  function adjustChatHistoryPadding() {
+    const inputArea = document.querySelector('.input-area');
+    const chatHistory = document.querySelector('.chat-history');
+    if (!inputArea || !chatHistory) return;
+
+    const inputHeight = inputArea.offsetHeight;
+    chatHistory.style.paddingBottom = `${inputHeight + 20}px`;
+    scrollToBottom();  // 调整后自动滚动到底部
+  }
+
+  // 监听输入框高度变化
+  const resizeObserver = new ResizeObserver(adjustChatHistoryPadding);
+  resizeObserver.observe(document.querySelector('.input-area'));
+
+  // 监听 textarea 的输入事件
+  document.querySelector('textarea').addEventListener('input', () => {
+    requestAnimationFrame(adjustChatHistoryPadding);  // 使用 requestAnimationFrame 优化性能
+  });
+
+  // 初始调整
+  adjustChatHistoryPadding();
+
+  // 在窗口大小改变时也调整
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(adjustChatHistoryPadding);
+  });
 });
 
 // 监听消息
@@ -109,8 +137,10 @@ window.addEventListener('message', (event) => {
 });
 
 function scrollToBottom() {
-  const chatHistory = document.getElementById('chatHistory');
-  chatHistory.scrollTop = chatHistory.scrollHeight;
+  requestAnimationFrame(() => {
+    const chatHistory = document.getElementById('chatHistory');
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+  });
 }
 
 function addMessageToChat(sender, message) {
