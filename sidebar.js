@@ -2,6 +2,58 @@ let pageContent = '';
 let currentMessageDiv = null;
 let currentFullResponse = '';
 
+// 添加聊天历史相关函数
+async function saveChatHistory(message) {
+  try {
+    console.log('Saving message to history:', message);
+    const data = await chrome.storage.local.get(['chatHistory']);
+    const chatHistory = data.chatHistory || [];
+    
+    // 确保消息有所有必要的字段
+    message.timestamp = message.timestamp || new Date().toISOString();
+    
+    chatHistory.push(message);
+    
+    // 限制历史记录数量，保留最近的100条
+    if (chatHistory.length > 100) {
+      chatHistory.shift();
+    }
+    
+    await chrome.storage.local.set({ chatHistory });
+    console.log('Chat history saved, total messages:', chatHistory.length);
+  } catch (error) {
+    console.error('Error saving chat history:', error);
+    throw error;  // 重新抛出错误以便调用者处理
+  }
+}
+
+async function loadChatHistory() {
+  try {
+    const data = await chrome.storage.local.get(['chatHistory']);
+    const chatHistory = data.chatHistory || [];
+    
+    console.log('Loading chat history, total messages:', chatHistory.length);
+    
+    // 按时间戳排序
+    chatHistory.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
+    
+    // 清空当前聊天记录
+    document.getElementById('chatHistory').innerHTML = '';
+    
+    // 显示所有消息
+    chatHistory.forEach(message => {
+      console.log('Processing message:', message);
+      if (message.role === 'user') {
+        addMessageToChat('user', message.content);
+      } else if (message.role === 'assistant') {
+        addMessageToChat('ai', message.content);
+      }
+    });
+  } catch (error) {
+    console.error('Error loading chat history:', error);
+  }
+}
+
 // 等待 DOM 加载完成后再进行初始化
 document.addEventListener('DOMContentLoaded', async () => {
   console.log('DOM loaded, initializing...');
@@ -26,7 +78,12 @@ document.addEventListener('DOMContentLoaded', async () => {
   // 设置总结按钮事件
   document.getElementById('summarizeBtn').addEventListener('click', () => {
     const textarea = document.getElementById('userInput');
-    textarea.value = "请总结这个网页的主要内容";
+    textarea.value = "请以 Markdown 格式总结这个网页的主要内容，包括：\n" +
+      "1. 用一级标题概括网页主题\n" +
+      "2. 用无序列表列出主要要点\n" +
+      "3. 如果有重要数据，用引用格式标注\n" +
+      "4. 如果有代码示例，使用代码块格式\n" +
+      "请确保返回格式化的 Markdown 文本。";
     document.getElementById('sendButton').click();
   });
 
@@ -94,14 +151,84 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.addEventListener('resize', () => {
     requestAnimationFrame(adjustChatHistoryPadding);
   });
+
+  // 添加清除按钮事件
+  document.getElementById('clearButton').addEventListener('click', async () => {
+    try {
+      // 获取当前日期的开始时间
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      // 获取所有聊天记录
+      const data = await chrome.storage.local.get(['chatHistory']);
+      const chatHistory = data.chatHistory || [];
+
+      // 过滤掉今天的聊天记录
+      const filteredHistory = chatHistory.filter(message => {
+        const messageDate = new Date(message.timestamp);
+        return messageDate < today;
+      });
+
+      // 保存过滤后的记录
+      await chrome.storage.local.set({ chatHistory: filteredHistory });
+
+      // 清空当前显示的聊天记录
+      document.getElementById('chatHistory').innerHTML = '';
+
+      // 重新加载过滤后的历史记录
+      loadChatHistory();
+
+      // 显示清除成功的提示
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message system-message';
+      messageDiv.textContent = '已清除今天的聊天记录';
+      document.getElementById('chatHistory').appendChild(messageDiv);
+
+      // 3秒后移除提示
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 3000);
+
+    } catch (error) {
+      console.error('Error clearing chat history:', error);
+      // 显示错误提示
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'message error-message';
+      errorDiv.textContent = '清除聊天记录时出错';
+      document.getElementById('chatHistory').appendChild(errorDiv);
+    }
+  });
+
+  // 添加系统消息样式
+  const style = document.createElement('style');
+  style.textContent = `
+    .system-message {
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      margin: 8px 0;
+      padding: 4px 8px;
+      background: #f8f9fa;
+      border-radius: 4px;
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+  `;
+  document.head.appendChild(style);
 });
 
-// 监听消息
+// 修改消息监听器
 window.addEventListener('message', (event) => {
   console.log('Sidebar received message:', event.data);
   
   if (event.data.action === "pageContent") {
     pageContent = event.data.content;
+    // 加载历史记录
+    loadChatHistory();
   } else if (event.data.action === "llmResponse") {
     console.log('Received LLM response:', event.data.response);
     
@@ -114,16 +241,21 @@ window.addEventListener('message', (event) => {
         currentMessageDiv.textContent = '抱歉，发生了错误：' + event.data.response.error;
       } else if (event.data.response.content) {
         console.log('Original response content:', event.data.response.content);
-        // 测试 Markdown 解析
         const parsedContent = marked.parse(event.data.response.content);
-        console.log('Parsed Markdown:', parsedContent);
         
         currentMessageDiv.innerHTML = parsedContent;
         currentMessageDiv.classList.add('markdown-content');
         
-        // 检查渲染后的 DOM
-        console.log('Rendered message DOM:', currentMessageDiv.innerHTML);
-        console.log('Applied classes:', currentMessageDiv.className);
+        // 修改这里：立即保存 AI 回复，不要等待 done 信号
+        saveChatHistory({
+          role: 'assistant',
+          content: event.data.response.content,
+          timestamp: new Date().toISOString()
+        }).then(() => {
+          console.log('AI response saved to history');
+        }).catch(error => {
+          console.error('Error saving AI response:', error);
+        });
       }
       
       scrollToBottom();
@@ -161,10 +293,6 @@ function addMessageToChat(sender, message) {
     
     contentDiv.innerHTML = parsedContent;
     contentDiv.classList.add('markdown-content');
-    
-    // 检查渲染后的结果
-    console.log('Rendered AI message DOM:', contentDiv.innerHTML);
-    console.log('AI message classes:', contentDiv.className);
   } else {
     contentDiv.textContent = message;
   }
@@ -172,13 +300,11 @@ function addMessageToChat(sender, message) {
   messageDiv.appendChild(contentDiv);
   chatHistory.appendChild(messageDiv);
   
-  // 检查最终的 DOM 结构
-  console.log('Final message DOM structure:', messageDiv.outerHTML);
-  
   scrollToBottom();
   return contentDiv;
 }
 
+// 修改消息发送函数
 async function handleSendMessage() {
   const userInput = document.getElementById('userInput');
   const message = userInput.value.trim();
@@ -186,6 +312,12 @@ async function handleSendMessage() {
   if (!message) return;
 
   console.log('Sending message:', message);
+
+  // 保存用户消息
+  await saveChatHistory({
+    role: 'user',
+    content: message
+  });
 
   addMessageToChat('user', message);
   userInput.value = '';

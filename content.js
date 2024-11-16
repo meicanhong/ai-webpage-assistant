@@ -175,6 +175,12 @@
       } catch (error) {
         console.error('Error sending page content:', error);
       }
+    } else if (event.data.action === "getCurrentUrl") {
+      // 返回当前页面的 URL
+      event.source.postMessage({
+        action: "currentUrl",
+        url: window.location.href
+      }, '*');
     } else if (event.data.action === "openSettings") {
       // 修改这里：直接发送消息给 background.js
       chrome.runtime.sendMessage({action: "openSettings"});
