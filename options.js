@@ -1,7 +1,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
   try {
     // 加载保存的设置
-    const data = await chrome.storage.sync.get(['apiKey', 'model']);
+    const data = await chrome.storage.sync.get(['apiKey', 'model', 'prompts']);
     
     const apiKeyInput = document.getElementById('apiKey');
     const modelSelect = document.getElementById('model');
@@ -10,15 +10,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       apiKeyInput.value = data.apiKey;
     }
     
-    // 设置默认模型为 gpt-4o-mini
     if (modelSelect) {
       modelSelect.value = data.model || 'gpt-4o-mini';
     }
 
-    // 如果是首次加载且没有保存过设置，自动保存默认模型
-    if (!data.model) {
-      await chrome.storage.sync.set({ model: 'gpt-4o-mini' });
+    // 加载保存的 prompts
+    if (data.prompts) {
+      renderPrompts(data.prompts);
     }
+
+    // 添加 Prompt 按钮事件
+    document.getElementById('addPromptBtn').addEventListener('click', async () => {
+      const newPrompt = document.getElementById('newPrompt').value.trim();
+      if (!newPrompt) return;
+
+      const data = await chrome.storage.sync.get(['prompts']);
+      const prompts = data.prompts || [];
+      prompts.push(newPrompt);
+
+      await chrome.storage.sync.set({ prompts });
+      document.getElementById('newPrompt').value = '';
+      renderPrompts(prompts);
+      showStatus('Prompt 已添加', 'success');
+    });
 
     // 保存设置
     document.getElementById('saveButton').addEventListener('click', async () => {
@@ -62,11 +76,40 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 });
 
+function renderPrompts(prompts) {
+  const promptList = document.getElementById('promptList');
+  promptList.innerHTML = '';
+
+  prompts.forEach((prompt, index) => {
+    const promptItem = document.createElement('div');
+    promptItem.className = 'prompt-item';
+    
+    const promptText = document.createElement('div');
+    promptText.className = 'prompt-text';
+    promptText.textContent = prompt;
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete-btn';
+    deleteBtn.textContent = '删除';
+    deleteBtn.onclick = async () => {
+      const data = await chrome.storage.sync.get(['prompts']);
+      const updatedPrompts = data.prompts.filter((_, i) => i !== index);
+      await chrome.storage.sync.set({ prompts: updatedPrompts });
+      renderPrompts(updatedPrompts);
+      showStatus('Prompt 已删除', 'success');
+    };
+
+    promptItem.appendChild(promptText);
+    promptItem.appendChild(deleteBtn);
+    promptList.appendChild(promptItem);
+  });
+}
+
 function showStatus(message, type) {
   const status = document.getElementById('status');
   if (status) {
     status.textContent = message;
-    status.className = `status ${type}`;
+    status.className = `message ${type}`;
     status.style.display = 'block';
     setTimeout(() => {
       status.style.display = 'none';

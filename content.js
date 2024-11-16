@@ -163,6 +163,7 @@
     }
   });
 
+  // 监听来自 iframe 的消息
   window.addEventListener('message', (event) => {
     if (event.data.action === "getPageContent") {
       const content = getPageContent();
@@ -175,7 +176,8 @@
         console.error('Error sending page content:', error);
       }
     } else if (event.data.action === "openSettings") {
-      chrome.runtime.openOptionsPage();
+      // 修改这里：直接发送消息给 background.js
+      chrome.runtime.sendMessage({action: "openSettings"});
     } else if (event.data.action === "sendToLLM") {
       try {
         console.log('Received sendToLLM request:', event.data);

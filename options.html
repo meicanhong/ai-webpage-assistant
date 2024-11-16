@@ -26,11 +26,16 @@
             display: block;
             margin-bottom: 5px;
         }
-        input, select {
+        input, select, textarea {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
+            font-family: inherit;
+        }
+        textarea {
+            min-height: 100px;
+            resize: vertical;
         }
         button {
             padding: 8px 16px;
@@ -56,6 +61,28 @@
             background: #fce8e6;
             color: #c5221f;
         }
+        .prompt-list {
+            margin-top: 20px;
+        }
+        .prompt-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .prompt-text {
+            flex: 1;
+        }
+        .delete-btn {
+            background: #dc3545;
+            padding: 4px 8px;
+        }
+        .delete-btn:hover {
+            background: #bb2d3b;
+        }
     </style>
 </head>
 <body>
@@ -65,6 +92,7 @@
         <label for="apiKey">OpenAI API Key</label>
         <input type="password" id="apiKey" />
     </div>
+    
     <div class="form-group">
         <label for="model">模型</label>
         <select id="model">
@@ -73,8 +101,20 @@
             <option value="gpt-4">gpt-4</option>
         </select>
     </div>
-    <button id="saveButton">保存</button>
+
+    <div class="form-group">
+        <label for="newPrompt">添加自定义 Prompt</label>
+        <textarea id="newPrompt" placeholder="输入你的 prompt..."></textarea>
+        <button id="addPromptBtn" style="margin-top: 8px;">添加</button>
+    </div>
+
+    <div class="prompt-list" id="promptList">
+        <!-- 已保存的 prompts 将在这里显示 -->
+    </div>
+
+    <button id="saveButton" style="margin-top: 20px;">保存设置</button>
     <div id="status" class="message"></div>
+
     <script src="options.js"></script>
 </body>
 </html> 

@@ -3,7 +3,7 @@ let currentMessageDiv = null;
 let currentFullResponse = '';
 
 // 等待 DOM 加载完成后再进行初始化
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   console.log('DOM loaded, initializing...');
   
   // 检查 marked 是否加载
@@ -44,6 +44,28 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('sendButton').click();
     }
   });
+
+  // 加载自定义 prompts
+  const data = await chrome.storage.sync.get(['prompts']);
+  if (data.prompts && data.prompts.length > 0) {
+    const quickActions = document.querySelector('.quick-actions');
+    
+    data.prompts.forEach(prompt => {
+      const btn = document.createElement('button');
+      btn.className = 'quick-action-btn';
+      // 截取前10个字符作为按钮文字
+      btn.textContent = prompt.slice(0, 10) + (prompt.length > 10 ? '...' : '');
+      btn.title = prompt; // 完整 prompt 显示在悬停提示中
+      
+      btn.addEventListener('click', () => {
+        const textarea = document.getElementById('userInput');
+        textarea.value = prompt;
+        document.getElementById('sendButton').click();
+      });
+      
+      quickActions.appendChild(btn);
+    });
+  }
 });
 
 // 监听消息
