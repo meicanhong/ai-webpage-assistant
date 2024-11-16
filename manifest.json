@@ -4,11 +4,11 @@
   "version": "1.0",
   "description": "Chat with AI about current webpage content",
   "icons": {
-    "128": "icons/icon.svg"
+    "128": "icons/chat.png"
   },
   "action": {
     "default_title": "AI Chat Sidebar",
-    "default_icon": "icons/icon.svg"
+    "default_icon": "icons/chat.png"
   },
   "permissions": [
     "activeTab",
@@ -34,7 +34,15 @@
     }
   ],
   "web_accessible_resources": [{
-    "resources": ["sidebar.html", "sidebar.js", "styles/sidebar.css", "options.html", "options.js"],
+    "resources": [
+      "sidebar.html",
+      "sidebar.js",
+      "styles/sidebar.css",
+      "options.html",
+      "options.js",
+      "lib/marked.min.js",
+      "icons/chat.png"
+    ],
     "matches": ["<all_urls>"]
   }],
   "options_page": "options.html"
