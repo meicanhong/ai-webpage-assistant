@@ -12,13 +12,10 @@
 
   function connectToBackground() {
     try {
-      console.log("Connecting to background...");
       port = chrome.runtime.connect({ name: "llm-stream" });
 
       port.onMessage.addListener((response) => {
-        console.log("Received response from background:", response);
         if (messageSource) {
-          console.log("Forwarding response to iframe:", response);
           messageSource.postMessage(
             {
               action: "llmResponse",
@@ -27,15 +24,12 @@
             "*"
           );
         } else {
-          console.log("No message source available");
         }
       });
 
       port.onDisconnect.addListener(() => {
-        console.log("Port disconnected");
         port = null;
         if (chrome.runtime.lastError || !chrome.runtime) {
-          console.log("Extension context invalidated, reconnecting...");
           setTimeout(connectToBackground, 1000);
         }
       });
@@ -191,32 +185,24 @@
     } else if (event.data.action === "openSettings") {
       chrome.runtime.sendMessage({ action: "openSettings" });
     } else if (event.data.action === "toggleSidebar") {
-      console.log("Received toggleSidebar action");
       if (sidebar) {
-        console.log("Current sidebar right position:", sidebar.style.right);
         if (sidebar.style.right === "0px") {
           sidebar.style.right = "-400px";
         } else {
           sidebar.style.right = "0px";
         }
-        console.log("New sidebar right position:", sidebar.style.right);
       } else {
         console.error("Sidebar element not found");
       }
     } else if (event.data.action === "sendToLLM") {
       try {
-        console.log("Received sendToLLM request:", event.data);
-
         messageSource = event.source;
-        console.log("Message source saved:", !!messageSource);
 
         if (!port) {
-          console.log("Creating new port connection");
           port = connectToBackground();
         }
 
         if (!port) {
-          console.log("Failed to create port connection");
           messageSource.postMessage(
             {
               action: "llmResponse",

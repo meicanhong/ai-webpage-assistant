@@ -1,6 +1,5 @@
 async function callOpenAI(message, context, port) {
   try {
-    console.log("Starting callOpenAI...");
     // 获取设置
     const { apiKey, model } = await chrome.storage.sync.get([
       "apiKey",
@@ -15,9 +14,12 @@ async function callOpenAI(message, context, port) {
 
     // 使用 GPT-4 Omni 作为默认模型
     const useModel = model || "gpt-4o-mini";
-    console.log("Using model:", useModel);
 
-    console.log("Calling OpenAI API...");
+    console.log("Sending message to OpenAI:", {
+      context,
+      message,
+      model: useModel,
+    });
     try {
       // 先尝试非流式请求
       const response = await fetch(
@@ -48,20 +50,16 @@ async function callOpenAI(message, context, port) {
         }
       );
 
-      console.log("API Response status:", response.status);
-
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error?.message || "调用 AI 服务失败");
       }
 
       const data = await response.json();
-      console.log("API Response data:", data);
 
       const content = data.choices[0]?.message?.content;
 
       if (content) {
-        console.log("Sending content to port:", content);
         // 发送完整响应
         port.postMessage({ content });
         // 发送完成信号
@@ -84,16 +82,13 @@ let connections = new Set();
 
 chrome.runtime.onConnect.addListener((port) => {
   if (port.name === "llm-stream") {
-    console.log("New connection established");
     connections.add(port);
 
     port.onDisconnect.addListener(() => {
-      console.log("Connection disconnected");
       connections.delete(port);
     });
 
     port.onMessage.addListener((request) => {
-      console.log("Received message in background:", request);
       if (request.action === "sendToLLM") {
         callOpenAI(request.message, request.context, port);
       }

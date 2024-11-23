@@ -5,7 +5,6 @@ let currentFullResponse = "";
 // 添加聊天历史相关函数
 async function saveChatHistory(message) {
   try {
-    console.log("Saving message to history:", message);
     const data = await chrome.storage.local.get(["chatHistory"]);
     const chatHistory = data.chatHistory || [];
 
@@ -20,7 +19,6 @@ async function saveChatHistory(message) {
     }
 
     await chrome.storage.local.set({ chatHistory });
-    console.log("Chat history saved, total messages:", chatHistory.length);
   } catch (error) {
     console.error("Error saving chat history:", error);
     throw error; // 重新抛出错误以便调用者处理
@@ -32,8 +30,6 @@ async function loadChatHistory() {
     const data = await chrome.storage.local.get(["chatHistory"]);
     const chatHistory = data.chatHistory || [];
 
-    console.log("Loading chat history, total messages:", chatHistory.length);
-
     // 按时间戳排序
     chatHistory.sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
 
@@ -42,7 +38,6 @@ async function loadChatHistory() {
 
     // 显示所有消息
     chatHistory.forEach((message) => {
-      console.log("Processing message:", message);
       if (message.role === "user") {
         addMessageToChat("user", message.content);
       } else if (message.role === "assistant") {
@@ -56,21 +51,12 @@ async function loadChatHistory() {
 
 // 等待 DOM 加载完成后再进行初始化
 document.addEventListener("DOMContentLoaded", async () => {
-  console.log("DOM loaded, initializing...");
-
-  // 检查 marked 是否加载
-  console.log(
-    "Marked library status:",
-    typeof marked !== "undefined" ? "loaded" : "not loaded"
-  );
-
   // 配置 marked
   marked.setOptions({
     breaks: true,
     gfm: true,
     sanitize: false,
   });
-  console.log("Marked options set");
 
   // 获取页面内容
   window.parent.postMessage({ action: "getPageContent" }, "*");
@@ -224,15 +210,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 // 修改消息监听器
 window.addEventListener("message", (event) => {
-  console.log("Sidebar received message:", event.data);
-
   if (event.data.action === "pageContent") {
     pageContent = event.data.content;
     // 加载历史记录
     loadChatHistory();
   } else if (event.data.action === "llmResponse") {
-    console.log("Received LLM response:", event.data.response);
-
     if (currentMessageDiv) {
       currentMessageDiv.classList.remove("thinking");
 
@@ -242,7 +224,6 @@ window.addEventListener("message", (event) => {
         currentMessageDiv.textContent =
           "抱歉，发生了错误：" + event.data.response.error;
       } else if (event.data.response.content) {
-        console.log("Original response content:", event.data.response.content);
         const parsedContent = marked.parse(event.data.response.content);
 
         currentMessageDiv.innerHTML = parsedContent;
@@ -254,9 +235,7 @@ window.addEventListener("message", (event) => {
           content: event.data.response.content,
           timestamp: new Date().toISOString(),
         })
-          .then(() => {
-            console.log("AI response saved to history");
-          })
+          .then(() => {})
           .catch((error) => {
             console.error("Error saving AI response:", error);
           });
@@ -280,8 +259,6 @@ function scrollToBottom() {
 }
 
 function addMessageToChat(sender, message) {
-  console.log("Adding message:", { sender, message });
-
   const chatHistory = document.getElementById("chatHistory");
 
   const messageDiv = document.createElement("div");
@@ -291,10 +268,7 @@ function addMessageToChat(sender, message) {
   contentDiv.className = "message-content";
 
   if (sender === "ai") {
-    console.log("Original AI message:", message);
     const parsedContent = marked.parse(message);
-    console.log("Parsed AI message:", parsedContent);
-
     contentDiv.innerHTML = parsedContent;
     contentDiv.classList.add("markdown-content");
   } else {
@@ -314,8 +288,6 @@ async function handleSendMessage() {
   const message = userInput.value.trim();
 
   if (!message) return;
-
-  console.log("Sending message:", message);
 
   // 保存用户消息
   await saveChatHistory({
