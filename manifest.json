@@ -10,16 +10,8 @@
     "default_title": "AI Chat Sidebar",
     "default_icon": "icons/chat.png"
   },
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "storage",
-    "tabs"
-  ],
-  "host_permissions": [
-    "<all_urls>",
-    "https://api.openai.com/*"
-  ],
+  "permissions": ["activeTab", "scripting", "storage", "tabs"],
+  "host_permissions": ["<all_urls>", "https://api.openai.com/*"],
   "background": {
     "service_worker": "background.js"
   },
@@ -33,17 +25,19 @@
       "js": ["content.js"]
     }
   ],
-  "web_accessible_resources": [{
-    "resources": [
-      "sidebar.html",
-      "sidebar.js",
-      "styles/sidebar.css",
-      "options.html",
-      "options.js",
-      "lib/marked.min.js",
-      "icons/chat.png"
-    ],
-    "matches": ["<all_urls>"]
-  }],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "sidebar.html",
+        "sidebar.js",
+        "styles/sidebar.css",
+        "options.html",
+        "options.js",
+        "lib/marked.min.js",
+        "icons/chat.png"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
   "options_page": "options.html"
-} 
+}

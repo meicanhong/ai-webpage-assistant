@@ -1,154 +1,157 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>设置</title>
     <style>
-        body {
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 40px 20px;
+      body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+          sans-serif;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 40px 20px;
+      }
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 30px;
+        padding-bottom: 15px;
+        border-bottom: 1px solid #eee;
+      }
+      .title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #202124;
+        margin: 0;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+      }
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-family: inherit;
+      }
+      textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+      button {
+        padding: 8px 16px;
+        background: #1a73e8;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      button:hover {
+        background: #1557b0;
+      }
+      .message {
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 4px;
+      }
+      .success {
+        background: #e6f4ea;
+        color: #137333;
+        border: 1px solid #137333;
+      }
+      .error {
+        background: #fce8e6;
+        color: #c5221f;
+        border: 1px solid #c5221f;
+      }
+      .prompt-list {
+        margin-top: 20px;
+      }
+      .prompt-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        margin-bottom: 8px;
+      }
+      .prompt-text {
+        flex: 1;
+      }
+      .delete-btn {
+        background: #dc3545;
+        padding: 4px 8px;
+      }
+      .delete-btn:hover {
+        background: #bb2d3b;
+      }
+      #status {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        margin: 0;
+        padding: 12px 24px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 1000;
+        animation: fadeIn 0.3s ease-in-out;
+        text-align: center;
+        min-width: 200px;
+        display: none;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translate(-50%, -60%);
         }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid #eee;
+        to {
+          opacity: 1;
+          transform: translate(-50%, -50%);
         }
-        .title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #202124;
-            margin: 0;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: inherit;
-        }
-        textarea {
-            min-height: 100px;
-            resize: vertical;
-        }
-        button {
-            padding: 8px 16px;
-            background: #1a73e8;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #1557b0;
-        }
-        .message {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 4px;
-        }
-        .success {
-            background: #e6f4ea;
-            color: #137333;
-            border: 1px solid #137333;
-        }
-        .error {
-            background: #fce8e6;
-            color: #c5221f;
-            border: 1px solid #c5221f;
-        }
-        .prompt-list {
-            margin-top: 20px;
-        }
-        .prompt-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            margin-bottom: 8px;
-        }
-        .prompt-text {
-            flex: 1;
-        }
-        .delete-btn {
-            background: #dc3545;
-            padding: 4px 8px;
-        }
-        .delete-btn:hover {
-            background: #bb2d3b;
-        }
-        #status {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            margin: 0;
-            padding: 12px 24px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 1000;
-            animation: fadeIn 0.3s ease-in-out;
-            text-align: center;
-            min-width: 200px;
-            display: none;
-        }
-        @keyframes fadeIn {
-            from { 
-                opacity: 0; 
-                transform: translate(-50%, -60%);
-            }
-            to { 
-                opacity: 1; 
-                transform: translate(-50%, -50%);
-            }
-        }
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div class="header">
-        <h1 class="title">设置</h1>
-        <button id="saveButton">保存设置</button>
-    </div>
-    
-    <div class="form-group">
-        <label for="apiKey">OpenAI API Key</label>
-        <input type="password" id="apiKey" />
-    </div>
-    
-    <div class="form-group">
-        <label for="model">模型</label>
-        <select id="model">
-            <option value="gpt-4o-mini">gpt-4o-mini</option>
-            <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
-            <option value="gpt-4">gpt-4</option>
-        </select>
+      <h1 class="title">设置</h1>
+      <button id="saveButton">保存设置</button>
     </div>
 
     <div class="form-group">
-        <label for="newPrompt">添加自定义 Prompt</label>
-        <textarea id="newPrompt" placeholder="输入你的 prompt..."></textarea>
-        <button id="addPromptBtn" style="margin-top: 8px;">添加</button>
+      <label for="apiKey">OpenAI API Key</label>
+      <input type="password" id="apiKey" />
+    </div>
+
+    <div class="form-group">
+      <label for="model">模型</label>
+      <select id="model">
+        <option value="gpt-4o-mini">gpt-4o-mini</option>
+        <option value="gpt-3.5-turbo">gpt-3.5-turbo</option>
+        <option value="gpt-4">gpt-4</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="newPrompt">添加自定义 Prompt</label>
+      <textarea id="newPrompt" placeholder="输入你的 prompt..."></textarea>
+      <button id="addPromptBtn" style="margin-top: 8px">添加</button>
     </div>
 
     <div class="prompt-list" id="promptList">
-        <!-- 已保存的 prompts 将在这里显示 -->
+      <!-- 已保存的 prompts 将在这里显示 -->
     </div>
 
     <div id="status" class="message"></div>
 
     <script src="options.js"></script>
-</body>
-</html> 
+  </body>
+</html>
