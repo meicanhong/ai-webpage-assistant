@@ -20,8 +20,19 @@ async function saveChatHistory(message) {
 
     await chrome.storage.local.set({ chatHistory });
   } catch (error) {
-    console.error("Error saving chat history:", error);
-    throw error; // 重新抛出错误以便调用者处理
+    // 如果是扩展上下文失效的错误，尝试重新连接
+    if (error.message.includes("Extension context invalidated")) {
+      console.warn("Extension context invalidated, attempting to reconnect...");
+      // 通知父窗口重新加载扩展
+      window.parent.postMessage(
+        {
+          action: "reloadExtension",
+        },
+        "*"
+      );
+    } else {
+      console.error("Error saving chat history:", error);
+    }
   }
 }
 
@@ -289,16 +300,16 @@ async function handleSendMessage() {
 
   if (!message) return;
 
-  // 保存用户消息
-  await saveChatHistory({
-    role: "user",
-    content: message,
-  });
-
-  addMessageToChat("user", message);
-  userInput.value = "";
-
   try {
+    // 保存用户消息
+    await saveChatHistory({
+      role: "user",
+      content: message,
+    });
+
+    addMessageToChat("user", message);
+    userInput.value = "";
+
     const messageDiv = document.createElement("div");
     messageDiv.className = "message ai-message";
 
@@ -318,7 +329,7 @@ async function handleSendMessage() {
       "*"
     );
   } catch (error) {
-    console.error("Error sending message:", error);
+    console.error("Error in handleSendMessage:", error);
     const errorDiv = addMessageToChat(
       "ai",
       "抱歉，发生了错误：" + error.message

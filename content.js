@@ -122,16 +122,62 @@
         elements.forEach((element) => element.remove());
       });
 
-      // 提取文本内容
-      const content = virtualContainer.textContent || "";
+      // 提取文本内容，保留段落结构
+      let content = "";
+      const elements = virtualContainer.querySelectorAll(
+        "p, h1, h2, h3, h4, h5, h6, img, pre, code, blockquote, ul, ol, li"
+      );
+
+      elements.forEach((element) => {
+        if (element.tagName.toLowerCase() === "img") {
+          // 处理图片
+          const alt = element.getAttribute("alt") || "";
+          const src = element.getAttribute("src") || "";
+          content += `\n![${alt}](${src})\n\n`;
+        } else if (element.tagName.toLowerCase().startsWith("h")) {
+          // 处理标题
+          const level = element.tagName[1];
+          const prefix = "#".repeat(parseInt(level));
+          content += `\n${prefix} ${element.textContent.trim()}\n\n`;
+        } else if (
+          element.tagName.toLowerCase() === "pre" ||
+          element.tagName.toLowerCase() === "code"
+        ) {
+          // 处理代码块
+          content += `\n\`\`\`\n${element.textContent.trim()}\n\`\`\`\n\n`;
+        } else if (element.tagName.toLowerCase() === "blockquote") {
+          // 处理引用
+          content += `\n> ${element.textContent.trim()}\n\n`;
+        } else if (
+          element.tagName.toLowerCase() === "ul" ||
+          element.tagName.toLowerCase() === "ol"
+        ) {
+          // 处理列表（只处理直接子元素）
+          const items = element.children;
+          Array.from(items).forEach((item) => {
+            if (item.tagName.toLowerCase() === "li") {
+              content += `\n- ${item.textContent.trim()}\n`;
+            }
+          });
+          content += "\n";
+        } else {
+          // 处理普通段落
+          const text = element.textContent.trim();
+          if (text) {
+            content += `\n${text}\n\n`;
+          }
+        }
+      });
 
       // 清理文本
-      const cleanContent = content.replace(/\s+/g, " ").trim();
+      content = content
+        .replace(/\n{3,}/g, "\n\n") // 将多个换行符替换为两个
+        .trim();
 
       // 移除虚拟容器
       virtualContainer.remove();
 
-      return cleanContent;
+      return content;
     } catch (error) {
       console.error("Error getting page content:", error);
       return document.body.innerText || "";
@@ -227,6 +273,18 @@
           },
           "*"
         );
+      }
+    } else if (event.data.action === "reloadExtension") {
+      // 重新加载扩展
+      chrome.runtime.reload();
+      // 重新创建侧边栏
+      if (sidebar) {
+        sidebar.remove();
+        sidebar = null;
+      }
+      sidebar = createSidebar();
+      if (sidebar) {
+        sidebar.style.right = "0px";
       }
     }
   });
