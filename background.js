@@ -1,3 +1,5 @@
+console.log("Background script starting...");
+
 async function callOpenAI(message, context, port) {
   try {
     // 获取设置
@@ -115,3 +117,54 @@ chrome.action.onClicked.addListener(async (tab) => {
     console.error("Error toggling sidebar:", error);
   }
 });
+// 添加监听器安装确认
+console.log("Bilibili request listener installed");
+
+let sentRequests = new Set();
+
+// 监听请求完成
+chrome.webRequest.onCompleted.addListener(
+  async (details) => {
+    if (details.type === "xmlhttprequest") {
+      try {
+        if (sentRequests.has(details.url)) {
+          return;
+        }
+        sentRequests.add(details.url);
+        const response = await fetch(details.url);
+        const data = await response.json();
+
+        // 检查并获取字幕 URL
+        if (data?.data?.subtitle?.subtitles?.[0]?.subtitle_url) {
+          const subtitleUrl =
+            "https:" + data.data.subtitle.subtitles[0].subtitle_url;
+          console.log("Found subtitle URL:", subtitleUrl);
+
+          // 获取字幕内容
+          try {
+            const subtitleResponse = await fetch(subtitleUrl);
+            const subtitleData = await subtitleResponse.json();
+
+            // 提取并拼接所有字幕内容
+            if (subtitleData.body) {
+              const subtitleText = subtitleData.body
+                .map((item) => item.content)
+                .join("\n");
+              console.log("Background script 完整字幕内容:", subtitleText);
+            }
+          } catch (error) {
+            console.error("Error fetching subtitle:", error);
+          }
+        }
+
+        console.log("Background script Bilibili API Response:", {
+          url: details.url,
+          data: data,
+        });
+      } catch (error) {
+        console.error("Error fetching Bilibili API response:", error);
+      }
+    }
+  },
+  { urls: ["*://api.bilibili.com/x/player/wbi/v2*"] }
+);

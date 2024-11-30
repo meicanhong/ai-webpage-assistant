@@ -6,9 +6,12 @@
   }
   window.aiChatSidebarInjected = true;
 
+  console.log("B站字幕助手已启动");
+
   let sidebar = null;
   let port = null;
   let messageSource = null;
+  let subtitleContent = null;
 
   function connectToBackground() {
     try {
@@ -286,6 +289,59 @@
       if (sidebar) {
         sidebar.style.right = "0px";
       }
+    } else if (event.data.action === "getSubtitle") {
+      if (subtitleContent) {
+        event.source.postMessage(
+          {
+            action: "subtitleContent",
+            content: subtitleContent,
+          },
+          "*"
+        );
+      } else {
+        event.source.postMessage(
+          {
+            action: "subtitleContent",
+            error: "未找到字幕内容，请确保视频有字幕并刷新页面",
+          },
+          "*"
+        );
+      }
     }
   });
+
+  // 监听来自 background script 的消息
+  chrome.runtime.onMessage.addListener(
+    async (request, sender, sendResponse) => {
+      if (request.action === "fetchBilibiliResponse") {
+        try {
+          const response = await fetch(request.url);
+          const data = await response.json();
+
+          // 检查并获取字幕 URL
+          if (data?.data?.subtitle?.subtitles?.[0]?.subtitle_url) {
+            const subtitleUrl =
+              "https:" + data.data.subtitle.subtitles[0].subtitle_url;
+
+            // 获取字幕内容
+            try {
+              const subtitleResponse = await fetch(subtitleUrl);
+              const subtitleData = await subtitleResponse.json();
+
+              // 提取并拼接所有字幕内容
+              if (subtitleData.body) {
+                subtitleContent = subtitleData.body
+                  .map((item) => item.content)
+                  .join("\n");
+              }
+            } catch (error) {
+              console.error("Error fetching subtitle:", error);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching Bilibili response:", error);
+        }
+      }
+    }
+  );
 })();

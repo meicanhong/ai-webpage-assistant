@@ -217,6 +217,12 @@ document.addEventListener("DOMContentLoaded", async () => {
       "*"
     );
   });
+
+  // 添加字幕按钮事件监听
+  const subtitleBtn = document.getElementById("subtitleBtn");
+  if (subtitleBtn) {
+    subtitleBtn.addEventListener("click", fetchSubtitle);
+  }
 });
 
 // 修改消息监听器
@@ -259,6 +265,28 @@ window.addEventListener("message", (event) => {
         currentFullResponse = "";
       }
     }
+  } else if (event.data.action === "subtitleContent") {
+    console.log("字幕内容:", event.data);
+    if (event.data.error) {
+      appendMessage("system", "获取字幕失败: " + event.data.error);
+    } else if (event.data.content) {
+      appendMessage("system", "字幕内容:\n\n" + event.data.content);
+    }
+  } else if (event.data.action === "currentUrl") {
+    const videoUrl = event.data.url;
+    if (!videoUrl.includes("bilibili.com/video/")) {
+      appendMessage("system", "请在 B站 视频页面使用此功能");
+      return;
+    }
+    console.log("当前视频 URL:", videoUrl);
+
+    // 确认是视频页面后，继续获取字幕
+    window.parent.postMessage(
+      {
+        action: "getSubtitle",
+      },
+      "*"
+    );
   }
 });
 
@@ -336,4 +364,42 @@ async function handleSendMessage() {
     );
     errorDiv.classList.add("error-message");
   }
+}
+
+// 获取字幕内容
+async function fetchSubtitle() {
+  try {
+    appendMessage("system", "正在获取字幕...");
+
+    // 先获取当前页面 URL
+    window.parent.postMessage(
+      {
+        action: "getCurrentUrl",
+      },
+      "*"
+    );
+  } catch (error) {
+    console.error("Error fetching subtitle:", error);
+    appendMessage("system", "获取字幕失败: " + error.message);
+  }
+}
+
+// 添加系统消息到聊天记录
+function appendMessage(type, message) {
+  const chatHistory = document.getElementById("chatHistory");
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `message ${type}-message`;
+
+  if (type === "system") {
+    // 对于系统消息，使用预格式化文本
+    const pre = document.createElement("pre");
+    pre.textContent = message;
+    messageDiv.appendChild(pre);
+  } else {
+    // 对于其他类型的消息，使用普通文本
+    messageDiv.textContent = message;
+  }
+
+  chatHistory.appendChild(messageDiv);
+  scrollToBottom();
 }
