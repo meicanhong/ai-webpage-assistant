@@ -131,12 +131,7 @@
       );
 
       elements.forEach((element) => {
-        if (element.tagName.toLowerCase() === "img") {
-          // 处理图片
-          const alt = element.getAttribute("alt") || "";
-          const src = element.getAttribute("src") || "";
-          content += `\n![${alt}](${src})\n\n`;
-        } else if (element.tagName.toLowerCase().startsWith("h")) {
+        if (element.tagName.toLowerCase().startsWith("h")) {
           // 处理标题
           const level = element.tagName[1];
           const prefix = "#".repeat(parseInt(level));
