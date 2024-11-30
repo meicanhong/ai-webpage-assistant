@@ -222,11 +222,37 @@ ${pageContent}`;
     );
   });
 
-  // 添加字幕按钮事件监听
-  const subtitleBtn = document.getElementById("subtitleBtn");
-  if (subtitleBtn) {
-    subtitleBtn.addEventListener("click", fetchSubtitle);
-  }
+  // 检查是否在 B站 页面
+  window.parent.postMessage({ action: "getCurrentUrl" }, "*");
+
+  // 监听 URL 响应
+  window.addEventListener("message", function handleUrlResponse(event) {
+    if (event.data.action === "currentUrl") {
+      console.log("Received URL:", event.data.url);
+      const subtitleBtn = document.getElementById("subtitleBtn");
+      if (subtitleBtn) {
+        // 只在 B站 视频页面显示字幕按钮
+        if (event.data.url.includes("bilibili.com/video/")) {
+          console.log("Showing subtitle button");
+          subtitleBtn.style.display = "inline-block";
+          // 移除现有的事件监听器（如果有的话）
+          subtitleBtn.removeEventListener("click", fetchSubtitle);
+          // 添加新的点击事件监听
+          subtitleBtn.addEventListener("click", fetchSubtitle);
+        } else {
+          console.log("Hiding subtitle button");
+          subtitleBtn.style.display = "none";
+        }
+      }
+      window.removeEventListener("message", handleUrlResponse);
+    } else if (event.data.action === "subtitleContent") {
+      if (event.data.error) {
+        appendMessage("system", "获取字幕失败: " + event.data.error);
+      } else if (event.data.content) {
+        appendMessage("system", "字幕内容:\n\n" + event.data.content);
+      }
+    }
+  });
 });
 
 // 修改消息监听器
@@ -283,14 +309,6 @@ window.addEventListener("message", (event) => {
       return;
     }
     console.log("当前视频 URL:", videoUrl);
-
-    // 确认是视频页面后，继续获取字幕
-    window.parent.postMessage(
-      {
-        action: "getSubtitle",
-      },
-      "*"
-    );
   }
 });
 
@@ -391,23 +409,21 @@ function appendTempMessage(type, message) {
 
 // 获取字幕内容
 async function fetchSubtitle() {
+  console.log("fetchSubtitle called");
   try {
-    // 显示临时加载消息
     const loadingMsg = appendTempMessage("system", "正在获取字幕...");
-
-    // 先获取当前页面 URL
     window.parent.postMessage(
       {
-        action: "getCurrentUrl",
+        action: "getSubtitle",
       },
       "*"
     );
 
-    // 在收到字幕内容或错误时移除加载消息
+    // 监听字幕响应
     window.addEventListener("message", function handleSubtitleResponse(event) {
       if (event.data.action === "subtitleContent") {
-        loadingMsg.remove(); // 移除加载消息
-        window.removeEventListener("message", handleSubtitleResponse); // 移除监听器
+        loadingMsg.remove();
+        window.removeEventListener("message", handleSubtitleResponse);
       }
     });
   } catch (error) {
