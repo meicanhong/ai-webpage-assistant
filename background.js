@@ -23,7 +23,6 @@ async function callOpenAI(message, context, port) {
       model: useModel,
     });
     try {
-      // 先尝试非流式请求
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -79,48 +78,8 @@ async function callOpenAI(message, context, port) {
   }
 }
 
-// 处理连接
-let connections = new Set();
-
-chrome.runtime.onConnect.addListener((port) => {
-  if (port.name === "llm-stream") {
-    connections.add(port);
-
-    port.onDisconnect.addListener(() => {
-      connections.delete(port);
-    });
-
-    port.onMessage.addListener((request) => {
-      if (request.action === "sendToLLM") {
-        callOpenAI(request.message, request.context, port);
-      }
-    });
-  }
-});
-
-// 处理其他消息
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "openSettings") {
-    chrome.runtime.openOptionsPage();
-  }
-});
-
-// 处理插件图标点击事件
-chrome.action.onClicked.addListener(async (tab) => {
-  try {
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ["content.js"],
-    });
-    await chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
-  } catch (error) {
-    console.error("Error toggling sidebar:", error);
-  }
-});
-// 添加监听器安装确认
-console.log("Bilibili request listener installed");
-
 let sentRequests = new Set();
+let subtitleContent = null;
 
 // 监听请求完成
 chrome.webRequest.onCompleted.addListener(
@@ -151,6 +110,7 @@ chrome.webRequest.onCompleted.addListener(
                 .map((item) => item.content)
                 .join("\n");
               console.log("Background script 完整字幕内容:", subtitleText);
+              subtitleContent = subtitleText;
             }
           } catch (error) {
             console.error("Error fetching subtitle:", error);
@@ -168,3 +128,46 @@ chrome.webRequest.onCompleted.addListener(
   },
   { urls: ["*://api.bilibili.com/x/player/wbi/v2*"] }
 );
+
+// 处理连接
+let connections = new Set();
+
+chrome.runtime.onConnect.addListener((port) => {
+  if (port.name === "llm-stream") {
+    connections.add(port);
+
+    port.onDisconnect.addListener(() => {
+      connections.delete(port);
+    });
+
+    port.onMessage.addListener((request) => {
+      if (request.action === "sendToLLM") {
+        callOpenAI(request.message, request.context, port);
+      }
+    });
+  }
+});
+
+// 处理消息
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  if (request.action === "openSettings") {
+    chrome.runtime.openOptionsPage();
+  } else if (request.action === "getSubtitle") {
+    // 返回字幕内容
+    sendResponse({ content: subtitleContent });
+    return true; // 保持消息通道开启
+  }
+});
+
+// 处理插件图标点击事件
+chrome.action.onClicked.addListener(async (tab) => {
+  try {
+    await chrome.scripting.executeScript({
+      target: { tabId: tab.id },
+      files: ["content.js"],
+    });
+    await chrome.tabs.sendMessage(tab.id, { action: "toggleSidebar" });
+  } catch (error) {
+    console.error("Error toggling sidebar:", error);
+  }
+});

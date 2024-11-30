@@ -11,7 +11,6 @@
   let sidebar = null;
   let port = null;
   let messageSource = null;
-  let subtitleContent = null;
 
   function connectToBackground() {
     try {
@@ -290,58 +289,36 @@
         sidebar.style.right = "0px";
       }
     } else if (event.data.action === "getSubtitle") {
-      if (subtitleContent) {
+      try {
+        // 从 background 获取字幕内容
+        chrome.runtime.sendMessage({ action: "getSubtitle" }, (response) => {
+          if (response && response.content) {
+            event.source.postMessage(
+              {
+                action: "subtitleContent",
+                content: response.content,
+              },
+              "*"
+            );
+          } else {
+            event.source.postMessage(
+              {
+                action: "subtitleContent",
+                error: "未找到字幕内容，请确保视频有字幕并刷新页面",
+              },
+              "*"
+            );
+          }
+        });
+      } catch (error) {
         event.source.postMessage(
           {
             action: "subtitleContent",
-            content: subtitleContent,
-          },
-          "*"
-        );
-      } else {
-        event.source.postMessage(
-          {
-            action: "subtitleContent",
-            error: "未找到字幕内容，请确保视频有字幕并刷新页面",
+            error: "获取字幕失败: " + error.message,
           },
           "*"
         );
       }
     }
   });
-
-  // 监听来自 background script 的消息
-  chrome.runtime.onMessage.addListener(
-    async (request, sender, sendResponse) => {
-      if (request.action === "fetchBilibiliResponse") {
-        try {
-          const response = await fetch(request.url);
-          const data = await response.json();
-
-          // 检查并获取字幕 URL
-          if (data?.data?.subtitle?.subtitles?.[0]?.subtitle_url) {
-            const subtitleUrl =
-              "https:" + data.data.subtitle.subtitles[0].subtitle_url;
-
-            // 获取字幕内容
-            try {
-              const subtitleResponse = await fetch(subtitleUrl);
-              const subtitleData = await subtitleResponse.json();
-
-              // 提取并拼接所有字幕内容
-              if (subtitleData.body) {
-                subtitleContent = subtitleData.body
-                  .map((item) => item.content)
-                  .join("\n");
-              }
-            } catch (error) {
-              console.error("Error fetching subtitle:", error);
-            }
-          }
-        } catch (error) {
-          console.error("Error fetching Bilibili response:", error);
-        }
-      }
-    }
-  );
 })();
