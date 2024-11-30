@@ -80,13 +80,23 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 设置总结按钮事件
   document.getElementById("summarizeBtn").addEventListener("click", () => {
     const textarea = document.getElementById("userInput");
-    textarea.value =
-      "请以 Markdown 格式总结这个网页的主要内容，包括：\n" +
-      "1. 用一级标题概括网页主题\n" +
-      "2. 用无序列表列出主要要点\n" +
-      "3. 如果有重要数据，用引用格式标注\n" +
-      "4. 如果有代码示例，使用代码块格式\n" +
-      "请确保返回格式化的 Markdown 文本。";
+    textarea.value = `你是一个专业的文本清洁专家，请按照以下步骤处理文章：
+
+1. 内容净化
+   - 删除所有口语化、冗余的表达
+   - 移除广告性质的内容
+   - 去除与主题无关的描述和段落
+   - 保留文章的核心信息和主题相关的内容
+
+2. 输出要求
+   - 直接返回处理后的干净文本
+   - 保持原文的基本结构和逻辑
+   - 不需要添加任何总结或额外解释
+   - 重要内容用加粗格式
+   - 返回中文
+
+以下是需要处理的文本：
+${pageContent}`;
     document.getElementById("sendButton").click();
   });
 
