@@ -190,20 +190,14 @@ document.addEventListener("DOMContentLoaded", async () => {
   // 添加系统消息样式
   const style = document.createElement("style");
   style.textContent = `
-    .system-message {
-      text-align: center;
-      color: #666;
-      font-size: 12px;
-      margin: 8px 0;
-      padding: 4px 8px;
-      background: #f8f9fa;
-      border-radius: 4px;
+    .temp-message {
       animation: fadeIn 0.3s ease-in-out;
+      opacity: 0.8;
     }
 
     @keyframes fadeIn {
       from { opacity: 0; }
-      to { opacity: 1; }
+      to { opacity: 0.8; }
     }
   `;
   document.head.appendChild(style);
@@ -366,10 +360,30 @@ async function handleSendMessage() {
   }
 }
 
+// 添加临时消息到聊天记录
+function appendTempMessage(type, message) {
+  const chatHistory = document.getElementById("chatHistory");
+  const messageDiv = document.createElement("div");
+  messageDiv.className = `message ${type}-message temp-message`;
+
+  if (type === "system") {
+    const pre = document.createElement("pre");
+    pre.textContent = message;
+    messageDiv.appendChild(pre);
+  } else {
+    messageDiv.textContent = message;
+  }
+
+  chatHistory.appendChild(messageDiv);
+  scrollToBottom();
+  return messageDiv; // 返回消息元素以便后续移除
+}
+
 // 获取字幕内容
 async function fetchSubtitle() {
   try {
-    appendMessage("system", "正在获取字幕...");
+    // 显示临时加载消息
+    const loadingMsg = appendTempMessage("system", "正在获取字幕...");
 
     // 先获取当前页面 URL
     window.parent.postMessage(
@@ -378,6 +392,14 @@ async function fetchSubtitle() {
       },
       "*"
     );
+
+    // 在收到字幕内容或错误时移除加载消息
+    window.addEventListener("message", function handleSubtitleResponse(event) {
+      if (event.data.action === "subtitleContent") {
+        loadingMsg.remove(); // 移除加载消息
+        window.removeEventListener("message", handleSubtitleResponse); // 移除监听器
+      }
+    });
   } catch (error) {
     console.error("Error fetching subtitle:", error);
     appendMessage("system", "获取字幕失败: " + error.message);
@@ -385,21 +407,25 @@ async function fetchSubtitle() {
 }
 
 // 添加系统消息到聊天记录
-function appendMessage(type, message) {
+function appendMessage(type, message, temporary = false) {
   const chatHistory = document.getElementById("chatHistory");
   const messageDiv = document.createElement("div");
-  messageDiv.className = `message ${type}-message`;
+  messageDiv.className = `message ${type}-message${
+    temporary ? " temp-message" : ""
+  }`;
 
   if (type === "system") {
-    // 对于系统消息，使用预格式化文本
     const pre = document.createElement("pre");
     pre.textContent = message;
     messageDiv.appendChild(pre);
   } else {
-    // 对于其他类型的消息，使用普通文本
     messageDiv.textContent = message;
   }
 
   chatHistory.appendChild(messageDiv);
   scrollToBottom();
+
+  if (temporary) {
+    return messageDiv;
+  }
 }

@@ -364,3 +364,22 @@ button {
 .collapse-button:hover {
   background: rgba(255, 255, 255, 0.2);
 }
+
+.system-message {
+  text-align: left;
+  color: #666;
+  font-size: 12px;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 4px;
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.system-message pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
+  font-size: inherit;
+}

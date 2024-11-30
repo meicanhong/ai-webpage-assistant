@@ -12,6 +12,21 @@
         font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
           sans-serif;
       }
+
+      /* 添加临时消息样式 */
+      .temp-message {
+        animation: fadeIn 0.3s ease-in-out;
+        opacity: 0.8;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 0.8;
+        }
+      }
     </style>
     <link rel="stylesheet" href="styles/sidebar.css" />
     <script src="lib/marked.min.js"></script>
