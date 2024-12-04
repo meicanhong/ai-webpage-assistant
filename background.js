@@ -108,7 +108,7 @@ chrome.webRequest.onCompleted.addListener(
             if (subtitleData.body) {
               const subtitleText = subtitleData.body
                 .map((item) => item.content)
-                .join("\n");
+                .join(", ");
               console.log("Background script 完整字幕内容:", subtitleText);
               subtitleContent = subtitleText;
             }
